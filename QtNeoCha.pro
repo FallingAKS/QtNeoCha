@@ -104,3 +104,6 @@ DISTFILES += \
     \
     pic/cursor.jpg \
     pic/icon.png
+
+RESOURCES += \
+    Resource/picture.qrc

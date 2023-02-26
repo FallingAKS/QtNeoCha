@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
     this->setWindowTitle("FuthkEditor"); //软件标题显示这个
-    this->setWindowIcon(QIcon("../QtNeoCha/pic/icon.png")); //设置窗口图标
+    this->setWindowIcon(QIcon(":/new/pic/icon.png")); //设置窗口图标
 
     setCentralWidget(central);
 
@@ -15,22 +15,26 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     m_ImageList->setIconSize(QSize(100, 100));//设置图片大小
     m_ImageList->setResizeMode(QListView::Adjust);//适应布局调整
     m_ImageList->setMovement(QListView::Static);//不能移
-    m_ImageList->setSelectionMode(QListView::NoSelection);
+    m_ImageList->setSelectionMode(QListView::NoSelection);//不能选
 
     //cursor
     QListWidgetItem* imageItem = new QListWidgetItem;
-    imageItem->setIcon(QIcon("../QtNeoCha/pic/cursor.jpg"));
+    imageItem->setIcon(QIcon(":/new/pic/cursor.jpg"));
     m_ImageList->addItem(imageItem);
 
     setFocusPolicy(Qt::StrongFocus);//按下tab才能focus on
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void MainWindow::keyPressEvent(QKeyEvent *event) {
-//    //ctrl系列
-//    if(Qt::Key_Space == event->key()){
-//        isSpace=!isSpace;
-//        return;
-//    }
+    //ctrl系列
+    if(event ->matches(QKeySequence::Save)){//ctrl s
+        QScreen *screen_test = QGuiApplication::primaryScreen();
+        QPixmap pixmap_test = screen_test->grabWindow(this->m_ImageList->winId(),0,0,30,-1);// x,y
+        //注意gitignore
+        pixmap_test.save(QCoreApplication::applicationDirPath() + "/../../QtNeoCha/1.jpg");
+
+        return;
+    }/////////////////////////////////////////////////////////////////////////////////////////////////
     //空格意味着大小写切换
     if(Qt::Key_Space == event->key()){
         isSpace=!isSpace;
@@ -40,13 +44,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     if(Qt::Key_Backspace == event->key()){
         int numOfItem=m_ImageList->count();
         if(numOfItem<=1)return;
-        QListWidgetItem *item = m_ImageList->takeItem(numOfItem-2);//选中最后一个的地址
-        delete item;
-        if(true==seqIsNumber.back()){//是数字就删两个
-            item = m_ImageList->takeItem(numOfItem-3);
+        for(int i=0; i<charLength.back(); i++){
+            QListWidgetItem *item = m_ImageList->takeItem(numOfItem-2-i);//选中最后一个的地址
             delete item;
         }
-        seqIsNumber.pop_back();
+        charLength.pop_back();
         return;
     } else if(Qt::Key_Delete == event->key()){//清空文本
         int numOfItem=m_ImageList->count();
@@ -54,7 +56,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
             QListWidgetItem *item = m_ImageList->takeItem(0);//选中第一个的地址
             delete item;
         }
-        seqIsNumber.clear();
+        charLength.clear();
         displayCursor();//需要重画光标
         return;
     }
@@ -66,14 +68,14 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
         displayChar("sn");
         ch='a'-'0'-1+event->key();
         str+=ch;
-        isSpace=false;//以防数字打出大写字母
+//        isSpace=false;//以防数字打出大写字母  //不用，因为先打的是sn.jpg，然后归小写，然后打字母
     } else if ('0' == event->key()) {
         displayChar("sn");
         ch='z';
         str+=ch;
-        isSpace=false;//以防数字打出大写字母
+//        isSpace=false;//以防数字打出大写字母
     } else if (event->key() >= 'A' && event->key() <= 'Z') {
-        ch=event->key();
+        ch=event->key()-'A'+'a';
         str+=ch;
     } else if ('[' == event->key() || '(' == event->key() || '{' == event->key()) {
         str+="sl";
@@ -99,9 +101,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     }
 
     if (('0' <= event->key() && '9' >= event->key()) ||'?' == event->key())
-        seqIsNumber.push_back(true);
-    else
-        seqIsNumber.push_back(false);
+        charLength.push_back(2);
+    else // 一个长度的
+        charLength.push_back(1);
     displayChar(str);
 }
 
@@ -114,10 +116,11 @@ void MainWindow::displayChar(const QString& s){
     QListWidgetItem *imageItem = new QListWidgetItem;
     QString picName;
     if(isSpace) {
-        picName="../QtNeoCha/pic/upper/"+s+".jpg";//空格意味着大小写切换,upper
+        picName=":/new/pic/upper/"+s+".jpg";//空格意味着大小写切换,upper
+        //":/new/pic/upper/a.jpg"
         isSpace=false;
     } else
-        picName="../QtNeoCha/pic/lower/"+s+".jpg";//lower
+        picName=":/new/pic/lower/"+s+".jpg";//lower
     imageItem->setIcon(QIcon(picName));
     m_ImageList->addItem(imageItem);
 
@@ -126,8 +129,20 @@ void MainWindow::displayChar(const QString& s){
 void MainWindow::displayCursor(){
     //cursor on
     QListWidgetItem *imageItem = new QListWidgetItem;
-    imageItem->setIcon(QIcon("../QtNeoCha/pic/cursor.jpg"));
+    imageItem->setIcon(QIcon(":/new/pic/cursor.jpg"));
     m_ImageList->addItem(imageItem);
+}
+void MainWindow::resizeEvent(QResizeEvent *event){
+    //		//不能显示滚动条
+    //		m_ImageList->resize(frameGeometry().size());
+
+    //可以显示出滚动条,但是效果不是很好 //最底下一点看不到
+    QSize sz=geometry().size();
+    sz.setHeight(sz.height()-50);
+    m_ImageList->resize(sz);
+
+    //        //可以显示出滚动条，显示效果也很好
+    //        m_ImageList->resize(ui->centralwidget->size()); //压根不行，这个
 }
  
 MainWindow::~MainWindow()

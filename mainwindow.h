@@ -13,16 +13,17 @@ class MainWindow : public QMainWindow
  
 public:
     void setSize(){m_ImageList->resize(this->size());}
-    void keyPressEvent(QKeyEvent *event);
 
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 private:
     void displayChar(const QString& s);
     void displayCursor();
+    virtual void keyPressEvent(QKeyEvent *event) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
 
     bool isSpace=false;
-    QVector<bool> seqIsNumber;
+    QVector<int> charLength;
     QWidget* central = new QWidget; //后面将listWidget加入mainWindow中
     QListWidget *m_ImageList = new QListWidget(central);
 
